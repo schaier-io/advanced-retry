@@ -6,6 +6,7 @@ A powerful and flexible retry library for TypeScript/JavaScript with support for
 [![Build Status][build-img]][build-url]
 [![Downloads][downloads-img]][downloads-url]
 [![Issues][issues-img]][issues-url]
+[![Code Coverage][codecov-img]][codecov-url]
 
 ## Features
 
@@ -242,6 +243,44 @@ interface DelayedRetryPolicy<X = any> {
 }
 ```
 
+## Requirements
+
+- Tested on Node.js 16.0 and higher
+- TypeScript 4.5+ (for TypeScript users)
+
+## Contributing
+
+Contributions are always welcome! Please read our [contributing guidelines](CONTRIBUTING.md) first.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Running Tests
+
+```bash
+npm install
+npm test
+```
+
+## Support
+
+- 📫 For bugs and feature requests, please [open an issue](https://github.com/schaier-io/advanced-retry/issues/new/choose)
+- 💬 For questions and discussions, please use [GitHub Discussions](https://github.com/schaier-io/advanced-retry/discussions)
+- 📝 Read our [documentation](https://github.com/schaier-io/advanced-retry/wiki) for more detailed information
+
+## FAQ
+
+### Why should I use Advanced-Retry instead of other retry libraries?
+
+Advanced-Retry provides superior type safety, flexible retry strategies, and comprehensive error handling while maintaining excellent performance.
+
+### Can I use Advanced-Retry in a browser environment?
+
+Yes! Advanced-Retry is fully compatible with both Node.js and browser environments.
+
 ## License
 
 MIT
@@ -254,3 +293,5 @@ MIT
 [npm-url]: https://www.npmjs.com/package/advanced-retry
 [issues-img]: https://img.shields.io/github/issues/schaier-io/advanced-retry
 [issues-url]: https://github.com/schaier-io/advanced-retry/issues
+[codecov-img]: https://codecov.io/gh/schaier-io/advanced-retry/branch/main/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/schaier-io/advanced-retry
