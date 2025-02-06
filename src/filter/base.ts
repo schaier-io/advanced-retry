@@ -65,3 +65,18 @@ export function anyFilters<X>(
     },
   };
 }
+
+export function noneFilters<X>(
+  filters: (ErrorFilter<X> | CanHandleErrorFunction<X>)[]
+): ErrorFilter<X> {
+  return {
+    canHandle: (error: unknown, attempt: number, context: RetryContext<X>) => {
+      return !filters.some(filter => {
+        if (typeof filter === 'function') {
+          return filter(error, attempt, context);
+        }
+        return filter.canHandle(error, attempt, context);
+      });
+    },
+  };
+}
