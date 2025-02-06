@@ -542,7 +542,7 @@ describe('executeWithRetry with filters', () => {
     });
     it('should handle complex nested filters', async () => {
       let attempts = 0;
-      const errorFilter: ErrorFilter = {
+      const errorFilter: ErrorFilter<any> = {
         canHandle: (error: unknown) =>
           error instanceof Error && error.message.includes('retry'),
       };
