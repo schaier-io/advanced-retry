@@ -1,4 +1,5 @@
 import {
+  abortSignalAny,
   customRetryErrorResolver,
   delayedRetryErrorResolver,
   executeWithRetry,
@@ -366,11 +367,11 @@ describe('executeWithRetry', () => {
               resolve(0);
             });
           }),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        abortSignal: AbortSignal.any([
+
+        abortSignal: abortSignalAny([
           abortController1.signal,
           abortController2.signal,
-        ]),
+        ]).signal,
       });
 
       setTimeout(() => {
@@ -405,11 +406,11 @@ describe('executeWithRetry', () => {
               resolve(0);
             });
           }),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        abortSignal: AbortSignal.any([
+
+        abortSignal: abortSignalAny([
           abortController1.signal,
           abortController2.signal,
-        ]),
+        ]).signal,
       });
 
       expect(result.success).toBe(false);
@@ -450,11 +451,11 @@ describe('executeWithRetry', () => {
             },
           }),
         ],
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        abortSignal: AbortSignal.any([
+
+        abortSignal: abortSignalAny([
           abortController1.signal,
           abortController2.signal,
-        ]),
+        ]).signal,
       });
 
       // Wait for a few retries then abort
@@ -488,11 +489,10 @@ describe('executeWithRetry', () => {
             // Clean up the listener after resolving
             signal?.removeEventListener('abort', abortHandler);
           }),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        abortSignal: AbortSignal.any([
+        abortSignal: abortSignalAny([
           abortController1.signal,
           abortController2.signal,
-        ]),
+        ]).signal,
       });
 
       // Abort after operation completes

@@ -1,6 +1,6 @@
 # Advanced-Retry
 
-A powerful and flexible retry library for TypeScript/JavaScript with support for custom retry strategies, error filtering, and abort signals.
+A powerful and flexible retry library for TypeScript/JavaScript with support for custom retry strategies, error filtering, abort signals, and so much more.
 
 [![npm package][npm-img]][npm-url]
 [![Build Status][build-img]][build-url]

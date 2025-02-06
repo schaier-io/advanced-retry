@@ -188,7 +188,7 @@ async function handleRetry<T, X>(
   throw new Error('Unexpected retry loop exit. This should never happen.');
 }
 
-function abortSignalAny(abortSignals: (AbortSignal | undefined)[]): {
+export function abortSignalAny(abortSignals: (AbortSignal | undefined)[]): {
   abortController: AbortController;
   signal: AbortSignal;
   abortListeners: ((e: Event) => void)[];
