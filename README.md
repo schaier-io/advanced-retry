@@ -18,7 +18,7 @@ A powerful and flexible retry library for TypeScript/JavaScript with support for
 
 - 📊 Context passing between retry attempts
 
-- 🎨 Powerful error filtering system
+- 🎨 Powerful error filtering system, with support for status code, keyword, and custom filters
 
 - ⏱️ Timeout and abort signal support
 
