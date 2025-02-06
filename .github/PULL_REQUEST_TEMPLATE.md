@@ -31,12 +31,10 @@
 
 - [ ] Code is up-to-date with the `main` branch
 - [ ] `npm run lint` passes with this change
-- [ ] `npm run test` passes with this change
-- [ ] This pull request links relevant issues as `Fixes #0000`
+- [ ] `npm run test` passes with this change and coverage is reported (as 100% is expected)
 - [ ] There are new or updated unit tests validating the change
 - [ ] Documentation has been updated to reflect this change
-- [ ] The new commits follow conventions outlined in the [conventional commit spec](https://www.conventionalcommits.org/en/v1.0.0/)
-
+- [ ] Optionally, this pull request links relevant issues as `Fixes #0000`
 <!--
   🎉 Thank you for contributing!
 -->
