@@ -71,15 +71,15 @@ export const delayedRetryErrorResolver =
               configuration,
             })
           : configuration.maxDelayMs
-          ? Math.min(
-              (configuration.initialDelayMs ?? 0) *
-                (attempt + 1) *
-                (configuration.backoffMultiplier ?? 1),
-              configuration.maxDelayMs
-            )
-          : (configuration.initialDelayMs ?? 0) *
-            (attempt + 1) *
-            (configuration.backoffMultiplier ?? 1);
+            ? Math.min(
+                (configuration.initialDelayMs ?? 0) *
+                  (attempt + 1) *
+                  (configuration.backoffMultiplier ?? 1),
+                configuration.maxDelayMs
+              )
+            : (configuration.initialDelayMs ?? 0) *
+              (attempt + 1) *
+              (configuration.backoffMultiplier ?? 1);
       await sleep(delay, abortSignal);
       return {
         remainingAttempts: configuration.maxRetries - attempt,

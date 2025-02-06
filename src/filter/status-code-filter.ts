@@ -1,6 +1,6 @@
 import { ErrorFilter } from './base';
 
-function getStatusCodeFromError(error: unknown): number | null {
+export function getStatusCodeFromError(error: unknown): number | null {
   // Check for standard response object with status
   if (typeof error === 'object' && error !== null) {
     const err = error as Record<string, unknown>;
