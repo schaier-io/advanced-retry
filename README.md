@@ -6,6 +6,7 @@ A powerful and flexible retry library for TypeScript/JavaScript with support for
 [![Build Status][build-img]][build-url]
 [![Downloads][downloads-img]][downloads-url]
 [![Issues][issues-img]][issues-url]
+[![Code Coverage][codecov-img]][codecov-url]
 
 ## Features
 
@@ -292,3 +293,5 @@ MIT
 [npm-url]: https://www.npmjs.com/package/advanced-retry
 [issues-img]: https://img.shields.io/github/issues/schaier-io/advanced-retry
 [issues-url]: https://github.com/schaier-io/advanced-retry/issues
+[codecov-img]: https://codecov.io/gh/schaier-io/advanced-retry/branch/main/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/schaier-io/advanced-retry
