@@ -275,15 +275,28 @@ npm test
 
 ### Why should I use Advanced-Retry instead of other retry libraries?
 
-Advanced-Retry provides superior type safety, flexible retry strategies, and comprehensive error handling while maintaining excellent performance.
+Advanced-Retry provides full type safety, flexible and customizable retry strategies where other packages are lacking.
+
+If you need full customizability, with useful defaults, helper functions and a focus on good developer experience, this package is for you.
+
+Small bonus: super light-weight dev framework, no dependencies and a focus on 100% test coverage (including branches).
 
 ### Can I use Advanced-Retry in a browser environment?
 
 Yes! Advanced-Retry is fully compatible with both Node.js and browser environments.
 
+### Are there any plans to add more features?
+
+Yes, if you are missing any features, please open an [issue](https://github.com/schaier-io/advanced-retry/issues/new/choose) to let me know.
+
+### Who uses this package?
+
+Currently it is a personal project, as I found a lack of fitting retry library for my use cases.
+I use it in various projects, but be aware it is currently very early stage.
+
 ## License
 
-MIT
+[MIT](LICENSE)
 
 [build-img]: https://github.com/schaier-io/advanced-retry/actions/workflows/release.yml/badge.svg
 [build-url]: https://github.com/schaier-io/advanced-retry/actions/workflows/release.yml
