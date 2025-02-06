@@ -6,22 +6,22 @@ import { RetryContext } from '../retry';
  * @param error - The error that occurred.
  * @returns Whether the error can be handled.
  */
-export type CanHandleErrorFunction = (
+export type CanHandleErrorFunction<X> = (
   error: unknown,
   attempt: number,
-  context: RetryContext<any>
+  context: RetryContext<X>
 ) => boolean;
 
 /**
  * Base interface for error filters
  */
-export interface ErrorFilter {
-  canHandle: CanHandleErrorFunction;
+export interface ErrorFilter<X> {
+  canHandle: CanHandleErrorFunction<X>;
 }
 
-export function toErrorFilter(
-  p: CanHandleErrorFunction | ErrorFilter
-): ErrorFilter {
+export function toErrorFilter<X>(
+  p: CanHandleErrorFunction<X> | ErrorFilter<X>
+): ErrorFilter<X> {
   if (typeof p === 'function') {
     return { canHandle: p };
   }
@@ -32,15 +32,11 @@ export function toErrorFilter(
  * Creates a filter that requires all provided filters to pass
  * @param filters Array of filters or filter functions
  */
-export function allFilters(
-  filters: (ErrorFilter | CanHandleErrorFunction)[]
-): ErrorFilter {
+export function allFilters<X>(
+  filters: (ErrorFilter<X> | CanHandleErrorFunction<X>)[]
+): ErrorFilter<X> {
   return {
-    canHandle: (
-      error: unknown,
-      attempt: number,
-      context: RetryContext<any>
-    ) => {
+    canHandle: (error: unknown, attempt: number, context: RetryContext<X>) => {
       return filters.every(filter => {
         if (typeof filter === 'function') {
           return filter(error, attempt, context);
@@ -55,15 +51,11 @@ export function allFilters(
  * Creates a filter that requires any of the provided filters to pass
  * @param filters Array of filters or filter functions
  */
-export function anyFilters(
-  filters: (ErrorFilter | CanHandleErrorFunction)[]
-): ErrorFilter {
+export function anyFilters<X>(
+  filters: (ErrorFilter<X> | CanHandleErrorFunction<X>)[]
+): ErrorFilter<X> {
   return {
-    canHandle: (
-      error: unknown,
-      attempt: number,
-      context: RetryContext<any>
-    ) => {
+    canHandle: (error: unknown, attempt: number, context: RetryContext<X>) => {
       return filters.some(filter => {
         if (typeof filter === 'function') {
           return filter(error, attempt, context);

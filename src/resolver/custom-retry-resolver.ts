@@ -19,7 +19,7 @@ export const customRetryErrorResolver =
     callback,
   }: {
     configuration: T;
-    canHandleError?: CanHandleErrorFunction | ErrorFilter;
+    canHandleError?: CanHandleErrorFunction<X> | ErrorFilter<X>;
     /**
      * @description The callback function that will be called to handle the error and try to resolve it. Here you can specify custom logic. It can optionally pass context to the next iteration
      * @param error - The error that occurred

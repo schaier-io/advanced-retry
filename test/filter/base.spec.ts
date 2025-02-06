@@ -15,7 +15,7 @@ describe('filter/base', () => {
     });
 
     it('should return ErrorFilter as is', () => {
-      const filter: ErrorFilter = { canHandle: () => true };
+      const filter: ErrorFilter<any> = { canHandle: () => true };
       const result = toErrorFilter(filter);
       expect(result).toBe(filter);
     });

@@ -55,7 +55,7 @@ export const delayedRetryErrorResolver =
     canHandleError = undefined,
   }: {
     configuration: DelayedRetryPolicy;
-    canHandleError?: CanHandleErrorFunction | ErrorFilter;
+    canHandleError?: CanHandleErrorFunction<X> | ErrorFilter<X>;
   }): ErrorResolverBase<RetryContext<X>, X> =>
   async ({ error, attempt, retryContext: context, abortSignal }) => {
     if (

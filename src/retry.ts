@@ -50,7 +50,7 @@ export type ErrorResolver<T, C extends RetryContext<X>, X> = ({
   context,
 }: {
   configuration: T;
-  canHandleError?: CanHandleErrorFunction | ErrorFilter;
+  canHandleError?: CanHandleErrorFunction<X> | ErrorFilter<X>;
   context?: C;
 }) => ErrorResolverBase<C, X>;
 
