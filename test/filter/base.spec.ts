@@ -3,6 +3,7 @@ import {
   anyFilters,
   toErrorFilter,
   ErrorFilter,
+  noneFilters,
 } from '../../src/filter/base';
 
 describe('filter/base', () => {
@@ -123,6 +124,63 @@ describe('filter/base', () => {
     });
   });
 
+  describe('noneFilters', () => {
+    it('should handle array of functions', () => {
+      const filter = noneFilters([() => false, () => false]);
+      expect(filter.canHandle({}, 0, {})).toBe(true);
+    });
+
+    it('should handle array of ErrorFilters', () => {
+      const filter = noneFilters([
+        { canHandle: () => false },
+        { canHandle: () => false },
+      ]);
+      expect(filter.canHandle({}, 0, {})).toBe(true);
+    });
+
+    it('should handle mixed array of functions and ErrorFilters', () => {
+      const filter = noneFilters([() => false, { canHandle: () => false }]);
+      expect(filter.canHandle({}, 0, {})).toBe(true);
+    });
+
+    it('should return false if any filter returns true', () => {
+      const filter = noneFilters([
+        () => false,
+        () => true,
+        { canHandle: () => false },
+      ]);
+      expect(filter.canHandle({}, 0, {})).toBe(false);
+    });
+
+    it('should pass error, attempt and context to filters', () => {
+      const error = new Error('test');
+      const attempt = 1;
+      const context = { data: 'test' };
+
+      const functionSpy = jest.fn(() => false);
+      const filterSpy = jest.fn(() => false);
+
+      const filter = noneFilters([functionSpy, { canHandle: filterSpy }]);
+
+      filter.canHandle(error, attempt, context);
+
+      expect(functionSpy).toHaveBeenCalledWith(error, attempt, context);
+      expect(filterSpy).toHaveBeenCalledWith(error, attempt, context);
+    });
+
+    it('should short-circuit evaluation when a filter returns true', () => {
+      const functionSpy = jest.fn(() => true);
+      const filterSpy = jest.fn(() => false);
+
+      const filter = noneFilters([functionSpy, { canHandle: filterSpy }]);
+
+      filter.canHandle({}, 0, {});
+
+      expect(functionSpy).toHaveBeenCalled();
+      expect(filterSpy).not.toHaveBeenCalled();
+    });
+  });
+
   describe('complex filter combinations', () => {
     it('should handle nested filters with allFilters', () => {
       const filter = allFilters([
@@ -147,6 +205,14 @@ describe('filter/base', () => {
           () => false,
         ]),
         { canHandle: () => true },
+      ]);
+      expect(filter.canHandle({}, 0, {})).toBe(true);
+    });
+
+    it('should handle combinations with noneFilters', () => {
+      const filter = allFilters([
+        noneFilters([() => false, { canHandle: () => false }]),
+        anyFilters([() => true, { canHandle: () => false }]),
       ]);
       expect(filter.canHandle({}, 0, {})).toBe(true);
     });
