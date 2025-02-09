@@ -16,14 +16,14 @@ export type CanHandleErrorFunction<X> = (
  * Base interface for error filters
  */
 export interface ErrorFilter<X> {
-  canHandle: CanHandleErrorFunction<X>;
+  canHandleError: CanHandleErrorFunction<X>;
 }
 
 export function toErrorFilter<X>(
   p: CanHandleErrorFunction<X> | ErrorFilter<X>
 ): ErrorFilter<X> {
   if (typeof p === 'function') {
-    return { canHandle: p };
+    return { canHandleError: p };
   }
   return p;
 }
@@ -32,16 +32,20 @@ export function toErrorFilter<X>(
  * Creates a filter that requires all provided filters to pass
  * @param filters Array of filters or filter functions
  */
-export function allFilters<X>(
+export function allErrorFilter<X>(
   filters: (ErrorFilter<X> | CanHandleErrorFunction<X>)[]
 ): ErrorFilter<X> {
   return {
-    canHandle: (error: unknown, attempt: number, context: RetryContext<X>) => {
+    canHandleError: (
+      error: unknown,
+      attempt: number,
+      context: RetryContext<X>
+    ) => {
       return filters.every(filter => {
         if (typeof filter === 'function') {
           return filter(error, attempt, context);
         }
-        return filter.canHandle(error, attempt, context);
+        return filter.canHandleError(error, attempt, context);
       });
     },
   };
@@ -51,31 +55,39 @@ export function allFilters<X>(
  * Creates a filter that requires any of the provided filters to pass
  * @param filters Array of filters or filter functions
  */
-export function anyFilters<X>(
+export function anyErrorFilter<X>(
   filters: (ErrorFilter<X> | CanHandleErrorFunction<X>)[]
 ): ErrorFilter<X> {
   return {
-    canHandle: (error: unknown, attempt: number, context: RetryContext<X>) => {
+    canHandleError: (
+      error: unknown,
+      attempt: number,
+      context: RetryContext<X>
+    ) => {
       return filters.some(filter => {
         if (typeof filter === 'function') {
           return filter(error, attempt, context);
         }
-        return filter.canHandle(error, attempt, context);
+        return filter.canHandleError(error, attempt, context);
       });
     },
   };
 }
 
-export function noneFilters<X>(
+export function noneErrorFilter<X>(
   filters: (ErrorFilter<X> | CanHandleErrorFunction<X>)[]
 ): ErrorFilter<X> {
   return {
-    canHandle: (error: unknown, attempt: number, context: RetryContext<X>) => {
+    canHandleError: (
+      error: unknown,
+      attempt: number,
+      context: RetryContext<X>
+    ) => {
       return !filters.some(filter => {
         if (typeof filter === 'function') {
           return filter(error, attempt, context);
         }
-        return filter.canHandle(error, attempt, context);
+        return filter.canHandleError(error, attempt, context);
       });
     },
   };

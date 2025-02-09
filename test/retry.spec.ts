@@ -1,9 +1,9 @@
 import {
   abortSignalAny,
-  customRetryErrorResolver,
-  delayedRetryErrorResolver,
-  executeWithRetry,
-  executeWithRetryAll,
+  customErrorResolver,
+  delayErrorResolver,
+  advancedRetry,
+  advancedRetryAll,
 } from '../src';
 
 describe('executeWithRetry', () => {
@@ -11,7 +11,7 @@ describe('executeWithRetry', () => {
   describe('successful operations', () => {
     it('should execute operation once and return result when successful', async () => {
       let executionCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           executionCount++;
           return Promise.resolve(42);
@@ -25,7 +25,7 @@ describe('executeWithRetry', () => {
     });
 
     it('should handle undefined return value as successful', async () => {
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => undefined,
       });
 
@@ -34,9 +34,22 @@ describe('executeWithRetry', () => {
       expect(result.totalAttemptsToSucceed).toBe(1);
     });
 
+    it('should call finallyCallback when operation succeeds', async () => {
+      let called = false;
+      const result = await advancedRetry({
+        operation: () => Promise.resolve('success'),
+        finallyCallback: () => {
+          called = true;
+        },
+      });
+
+      expect(result.success).toBe(true);
+      expect(called).toBe(true);
+    });
+
     it('should pass error context to operation', async () => {
       let count = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: c => {
           count++;
           if (count > 1) {
@@ -48,7 +61,7 @@ describe('executeWithRetry', () => {
           throw new Error('test');
         },
         errorResolvers: [
-          customRetryErrorResolver<{ maxRetries: number }, string>({
+          customErrorResolver<{ maxRetries: number }, string>({
             configuration: { maxRetries: 3 },
             canHandleError: () => true,
             callback: (error, attempt, configuration) => {
@@ -75,7 +88,7 @@ describe('executeWithRetry', () => {
     it('should return error details without retrying when no error resolver is provided', async () => {
       let executionCount = 0;
       const error = new Error('test error');
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           executionCount++;
           throw error;
@@ -91,7 +104,7 @@ describe('executeWithRetry', () => {
 
     it('should throw original error when throwOnUnrecoveredError is true', async () => {
       await expect(
-        executeWithRetry({
+        advancedRetry({
           operation: () => {
             throw new Error('test error');
           },
@@ -102,7 +115,7 @@ describe('executeWithRetry', () => {
 
     it('should retry until success when error resolver is provided', async () => {
       let attempts = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           attempts++;
           if (attempts < 3) {
@@ -111,7 +124,7 @@ describe('executeWithRetry', () => {
           return Promise.resolve('success');
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             configuration: {
               maxRetries: 5,
               initialDelayMs: 10,
@@ -129,7 +142,7 @@ describe('executeWithRetry', () => {
     });
 
     it('should handle non-Error throws', async () => {
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           throw 'string error';
         },
@@ -140,7 +153,7 @@ describe('executeWithRetry', () => {
     });
 
     it('should handle promise rejection with non-Error values', async () => {
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => Promise.reject('rejected'),
       });
 
@@ -152,7 +165,7 @@ describe('executeWithRetry', () => {
   // Timeout handling
   describe('timeout handling', () => {
     it('should succeed when operation completes within timeout', async () => {
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: async () => {
           await new Promise(resolve => setTimeout(resolve, 50));
           return 'success';
@@ -166,7 +179,7 @@ describe('executeWithRetry', () => {
 
     it('should fail when operation exceeds timeout', async () => {
       await expect(
-        executeWithRetry({
+        advancedRetry({
           operation: async () => {
             await new Promise(resolve => setTimeout(resolve, 100));
             return 'success';
@@ -181,7 +194,7 @@ describe('executeWithRetry', () => {
       const listeners = new Set<EventListener>();
 
       // Mock addEventListener to track listeners
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       const originalAddEventListener = AbortSignal.prototype.addEventListener;
       AbortSignal.prototype.addEventListener = function (
         this: AbortSignal,
@@ -194,7 +207,6 @@ describe('executeWithRetry', () => {
 
       // Mock removeEventListener to track removals
       const originalRemoveEventListener =
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         AbortSignal.prototype.removeEventListener;
       AbortSignal.prototype.removeEventListener = function (
         this: AbortSignal,
@@ -206,7 +218,7 @@ describe('executeWithRetry', () => {
       };
 
       try {
-        await executeWithRetry({
+        await advancedRetry({
           operation: async () => {
             await new Promise(resolve => setTimeout(resolve, 10));
             return 'success';
@@ -232,7 +244,7 @@ describe('executeWithRetry', () => {
       const abortController = new AbortController();
       let operationStarted = false;
 
-      const resultPromise = executeWithRetry({
+      const resultPromise = advancedRetry({
         operation: async (c, signal?: AbortSignal) => {
           operationStarted = true;
           return new Promise(resolve => {
@@ -261,7 +273,7 @@ describe('executeWithRetry', () => {
       abortController.abort();
       let operationStarted = false;
 
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           operationStarted = true;
           return Promise.resolve(true);
@@ -279,7 +291,7 @@ describe('executeWithRetry', () => {
       const abortController = new AbortController();
       abortController.abort();
 
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => new Promise(resolve => resolve(true)),
         abortSignal: abortController.signal,
       });
@@ -292,7 +304,7 @@ describe('executeWithRetry', () => {
     it('should abort when abort signal was triggered before operation started', async () => {
       const abortController = new AbortController();
       abortController.abort();
-      const resultPromise = executeWithRetry({
+      const resultPromise = advancedRetry({
         operation: (c, signal?: AbortSignal) =>
           new Promise(resolve => {
             const timeout = setTimeout(() => resolve(1), 1000);
@@ -314,7 +326,7 @@ describe('executeWithRetry', () => {
     it('should complete normally when abort is not triggered', async () => {
       const abortController = new AbortController();
 
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: async () => {
           await new Promise(resolve => setTimeout(resolve, 50));
           return 42;
@@ -328,14 +340,14 @@ describe('executeWithRetry', () => {
     it('should abort operation without error handling if abort signal is triggered in operation', async () => {
       const abortController = new AbortController();
       let retries = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           abortController.abort();
           retries++;
           throw new Error('test');
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             configuration: {
               maxRetries: 5,
               initialDelayMs: 10,
@@ -357,7 +369,7 @@ describe('executeWithRetry', () => {
       const abortController2 = new AbortController();
       let abortCount = 0;
 
-      const resultPromise = executeWithRetry({
+      const resultPromise = advancedRetry({
         operation: (c, signal?: AbortSignal) =>
           new Promise(resolve => {
             const timeout = setTimeout(() => resolve(1), 1000);
@@ -396,7 +408,7 @@ describe('executeWithRetry', () => {
       abortController1.abort(); // Pre-abort first controller
       let abortCount = 0;
 
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: (c, signal?: AbortSignal) =>
           new Promise(resolve => {
             const timeout = setTimeout(() => resolve(1), 100);
@@ -425,7 +437,7 @@ describe('executeWithRetry', () => {
       let attempts = 0;
       let abortCount = 0;
 
-      const resultPromise = executeWithRetry({
+      const resultPromise = advancedRetry({
         operation: (retryContext?, signal?) =>
           new Promise((resolve, reject) => {
             attempts++;
@@ -442,7 +454,7 @@ describe('executeWithRetry', () => {
             });
           }),
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             configuration: {
               maxRetries: 5,
               initialDelayMs: 10,
@@ -477,7 +489,7 @@ describe('executeWithRetry', () => {
       let operationCount = 0;
       let abortCount = 0;
 
-      await executeWithRetry({
+      await advancedRetry({
         operation: (c, signal?: AbortSignal) =>
           new Promise(resolve => {
             operationCount++;
@@ -507,7 +519,7 @@ describe('executeWithRetry', () => {
   // Multiple operations (executeWithRetryAll)
   describe('executeWithRetryAll', () => {
     it('should handle multiple operations with different results', async () => {
-      const result = await executeWithRetryAll({
+      const result = await advancedRetryAll({
         operations: [
           () => Promise.reject('rejected'),
           () => Promise.resolve('success'),
@@ -524,7 +536,7 @@ describe('executeWithRetry', () => {
       let successAttempts = 0;
       let errorCount = 0;
 
-      const result = await executeWithRetryAll({
+      const result = await advancedRetryAll({
         operations: [
           () => {
             errorCount++;
@@ -539,7 +551,7 @@ describe('executeWithRetry', () => {
           },
         ],
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             configuration: {
               maxRetries: 5,
               initialDelayMs: 10,

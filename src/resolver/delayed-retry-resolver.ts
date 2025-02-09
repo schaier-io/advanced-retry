@@ -25,7 +25,7 @@ async function sleep(ms: number, abortSignal?: AbortSignal) {
  * @property backoffMultiplier - Backoff multiplier, the delay is calculated as initialDelayMs * (attempt + 1) * backoffMultiplier
  * @property customDelay - Custom delay function. Customize the delay to your liking
  */
-export interface DelayedRetryPolicy<X = any | undefined> {
+export interface DelayPolicy<X = any | undefined> {
   maxRetries: number;
   initialDelayMs?: number;
   maxDelayMs?: number;
@@ -39,7 +39,7 @@ export interface DelayedRetryPolicy<X = any | undefined> {
     attempt: number;
     error: unknown;
     context: RetryContext<X>;
-    configuration: DelayedRetryPolicy;
+    configuration: DelayPolicy;
   }) => number;
 }
 
@@ -49,18 +49,18 @@ export interface DelayedRetryPolicy<X = any | undefined> {
  * @param canHandleError - Can handle error function
  * @returns Error resolver
  */
-export const delayedRetryErrorResolver =
+export const delayErrorResolver =
   <X = any | undefined>({
     configuration,
     canHandleError = undefined,
   }: {
-    configuration: DelayedRetryPolicy;
+    configuration: DelayPolicy;
     canHandleError?: CanHandleErrorFunction<X> | ErrorFilter<X>;
   }): ErrorResolverBase<RetryContext<X>, X> =>
   async ({ error, attempt, retryContext: context, abortSignal }) => {
     if (
       !canHandleError ||
-      toErrorFilter(canHandleError).canHandle(error, attempt, context)
+      toErrorFilter(canHandleError).canHandleError(error, attempt, context)
     ) {
       const delay =
         configuration.customDelay != undefined

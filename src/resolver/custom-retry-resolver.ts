@@ -12,7 +12,7 @@ import {
  * @param callback - The callback function that will be called to handle the error and try to resolve it. Here you can specify custom logic. It can optionally pass context to the next iteration
  * @returns Error resolver
  */
-export const customRetryErrorResolver =
+export const customErrorResolver =
   <T, X = any | undefined>({
     configuration,
     canHandleError,
@@ -49,7 +49,7 @@ export const customRetryErrorResolver =
   async ({ error, attempt, retryContext: context, abortSignal }) => {
     if (
       canHandleError == undefined ||
-      toErrorFilter(canHandleError).canHandle(error, attempt, context)
+      toErrorFilter(canHandleError).canHandleError(error, attempt, context)
     ) {
       /* istanbul ignore next */
       const r = await callback(

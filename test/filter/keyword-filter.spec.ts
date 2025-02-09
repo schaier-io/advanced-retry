@@ -1,6 +1,6 @@
 import {
-  keywordFilterAny,
-  keywordFilterAll,
+  keywordErrorFilterAny,
+  keywordErrorFilterAll,
   errorToString,
 } from '../../src/filter/keyword-filter';
 
@@ -29,69 +29,79 @@ describe('Keyword Filter', () => {
 
   describe('keywordFilterAny', () => {
     const keywords = ['timeout', 'network'];
-    const filter = keywordFilterAny(keywords);
+    const filter = keywordErrorFilterAny(keywords);
 
     it('should return true if error contains any keyword', () => {
       expect(
-        filter.canHandle(new Error('Connection timeout occurred'), 0, {})
+        filter.canHandleError(new Error('Connection timeout occurred'), 0, {})
       ).toBe(true);
-      expect(filter.canHandle('network error happened', 0, {})).toBe(true);
-      expect(filter.canHandle({ message: 'timeout error' }, 0, {})).toBe(true);
+      expect(filter.canHandleError('network error happened', 0, {})).toBe(true);
+      expect(filter.canHandleError({ message: 'timeout error' }, 0, {})).toBe(
+        true
+      );
     });
 
     it('should return false if error contains no keywords', () => {
-      expect(filter.canHandle(new Error('general error'), 0, {})).toBe(false);
-      expect(filter.canHandle('authentication failed', 0, {})).toBe(false);
-      expect(filter.canHandle({ message: 'invalid input' }, 0, {})).toBe(false);
-    });
-
-    it('should be case sensitive', () => {
-      expect(filter.canHandle('TIMEOUT error', 0, {})).toBe(false);
-      expect(filter.canHandle('NETWORK issue', 0, {})).toBe(false);
-    });
-
-    it('should handle empty keywords array', () => {
-      const emptyFilter = keywordFilterAny([]);
-      expect(emptyFilter.canHandle('any error', 0, {})).toBe(false);
-    });
-  });
-
-  describe('keywordFilterAll', () => {
-    const keywords = ['error', 'network'];
-    const filter = keywordFilterAll(keywords);
-
-    it('should return true if error contains all keywords', () => {
-      expect(filter.canHandle('network connection error', 0, {})).toBe(true);
-      expect(filter.canHandle(new Error('network error occurred'), 0, {})).toBe(
-        true
+      expect(filter.canHandleError(new Error('general error'), 0, {})).toBe(
+        false
       );
-      expect(filter.canHandle({ message: 'network system error' }, 0, {})).toBe(
-        true
-      );
-    });
-
-    it('should return false if error is missing any keyword', () => {
-      expect(filter.canHandle('only network issue', 0, {})).toBe(false);
-      expect(filter.canHandle('just an error', 0, {})).toBe(false);
-      expect(filter.canHandle({ message: 'connection error' }, 0, {})).toBe(
+      expect(filter.canHandleError('authentication failed', 0, {})).toBe(false);
+      expect(filter.canHandleError({ message: 'invalid input' }, 0, {})).toBe(
         false
       );
     });
 
     it('should be case sensitive', () => {
-      expect(filter.canHandle('NETWORK ERROR occurred', 0, {})).toBe(false);
-      expect(filter.canHandle('Network Error', 0, {})).toBe(false);
+      expect(filter.canHandleError('TIMEOUT error', 0, {})).toBe(false);
+      expect(filter.canHandleError('NETWORK issue', 0, {})).toBe(false);
     });
 
     it('should handle empty keywords array', () => {
-      const emptyFilter = keywordFilterAll([]);
-      expect(emptyFilter.canHandle('any error', 0, {})).toBe(true);
+      const emptyFilter = keywordErrorFilterAny([]);
+      expect(emptyFilter.canHandleError('any error', 0, {})).toBe(false);
+    });
+  });
+
+  describe('keywordFilterAll', () => {
+    const keywords = ['error', 'network'];
+    const filter = keywordErrorFilterAll(keywords);
+
+    it('should return true if error contains all keywords', () => {
+      expect(filter.canHandleError('network connection error', 0, {})).toBe(
+        true
+      );
+      expect(
+        filter.canHandleError(new Error('network error occurred'), 0, {})
+      ).toBe(true);
+      expect(
+        filter.canHandleError({ message: 'network system error' }, 0, {})
+      ).toBe(true);
+    });
+
+    it('should return false if error is missing any keyword', () => {
+      expect(filter.canHandleError('only network issue', 0, {})).toBe(false);
+      expect(filter.canHandleError('just an error', 0, {})).toBe(false);
+      expect(
+        filter.canHandleError({ message: 'connection error' }, 0, {})
+      ).toBe(false);
+    });
+
+    it('should be case sensitive', () => {
+      expect(filter.canHandleError('NETWORK ERROR occurred', 0, {})).toBe(
+        false
+      );
+      expect(filter.canHandleError('Network Error', 0, {})).toBe(false);
+    });
+
+    it('should handle empty keywords array', () => {
+      const emptyFilter = keywordErrorFilterAll([]);
+      expect(emptyFilter.canHandleError('any error', 0, {})).toBe(true);
     });
 
     it('should handle single keyword', () => {
-      const singleFilter = keywordFilterAll(['error']);
-      expect(singleFilter.canHandle('error occurred', 0, {})).toBe(true);
-      expect(singleFilter.canHandle('something else', 0, {})).toBe(false);
+      const singleFilter = keywordErrorFilterAll(['error']);
+      expect(singleFilter.canHandleError('error occurred', 0, {})).toBe(true);
+      expect(singleFilter.canHandleError('something else', 0, {})).toBe(false);
     });
   });
 });
