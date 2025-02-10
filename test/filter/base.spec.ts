@@ -11,7 +11,7 @@ describe('filter/base', () => {
     it('should convert function to ErrorFilter', () => {
       const fn = () => true;
       const filter = toErrorFilter(fn);
-      expect(filter).toHaveProperty('canHandle');
+      expect(filter).toHaveProperty('canHandleError');
       expect(filter.canHandleError).toBe(fn);
     });
 

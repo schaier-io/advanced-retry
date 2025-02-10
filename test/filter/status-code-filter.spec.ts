@@ -1,9 +1,9 @@
 import {
   statusCodeErrorFilterAny,
   statusCodeErrorFilterRange,
-  serverErrorFilter,
-  clientErrorFilter,
-  redirectFilter,
+  serverErrorErrorFilter,
+  clientErrorErrorFilter,
+  redirectErrorFilter,
 } from '../../src/filter/status-code-filter';
 
 describe('Status Filters', () => {
@@ -52,33 +52,39 @@ describe('Status Filters', () => {
 
   describe('predefined filters', () => {
     it('serverErrorFilter matches 5xx codes', () => {
-      expect(serverErrorFilter.canHandleError({ status: 500 }, 0, {})).toBe(
-        true
-      );
-      expect(serverErrorFilter.canHandleError({ status: 503 }, 0, {})).toBe(
-        true
-      );
-      expect(serverErrorFilter.canHandleError({ status: 400 }, 0, {})).toBe(
-        false
-      );
+      expect(
+        serverErrorErrorFilter.canHandleError({ status: 500 }, 0, {})
+      ).toBe(true);
+      expect(
+        serverErrorErrorFilter.canHandleError({ status: 503 }, 0, {})
+      ).toBe(true);
+      expect(
+        serverErrorErrorFilter.canHandleError({ status: 400 }, 0, {})
+      ).toBe(false);
     });
 
     it('clientErrorFilter matches 4xx codes', () => {
-      expect(clientErrorFilter.canHandleError({ status: 400 }, 0, {})).toBe(
-        true
-      );
-      expect(clientErrorFilter.canHandleError({ status: 404 }, 0, {})).toBe(
-        true
-      );
-      expect(clientErrorFilter.canHandleError({ status: 500 }, 0, {})).toBe(
-        false
-      );
+      expect(
+        clientErrorErrorFilter.canHandleError({ status: 400 }, 0, {})
+      ).toBe(true);
+      expect(
+        clientErrorErrorFilter.canHandleError({ status: 404 }, 0, {})
+      ).toBe(true);
+      expect(
+        clientErrorErrorFilter.canHandleError({ status: 500 }, 0, {})
+      ).toBe(false);
     });
 
     it('redirectFilter matches 3xx codes', () => {
-      expect(redirectFilter.canHandleError({ status: 301 }, 0, {})).toBe(true);
-      expect(redirectFilter.canHandleError({ status: 307 }, 0, {})).toBe(true);
-      expect(redirectFilter.canHandleError({ status: 400 }, 0, {})).toBe(false);
+      expect(redirectErrorFilter.canHandleError({ status: 301 }, 0, {})).toBe(
+        true
+      );
+      expect(redirectErrorFilter.canHandleError({ status: 307 }, 0, {})).toBe(
+        true
+      );
+      expect(redirectErrorFilter.canHandleError({ status: 400 }, 0, {})).toBe(
+        false
+      );
     });
   });
 
