@@ -1,6 +1,6 @@
 import { ErrorFilter } from './base';
 
-export function getStatusCodeFromError(error: unknown): number | null {
+export function errorToStatusCode(error: unknown): number | null {
   // Check for standard response object with status
   if (typeof error === 'object' && error !== null) {
     const err = error as Record<string, unknown>;
@@ -37,11 +37,11 @@ export function getStatusCodeFromError(error: unknown): number | null {
 /**
  * Creates a filter that matches if the error has any of the specified status codes
  */
-export const statusCodeFilterAny = <X>(
+export const statusCodeErrorFilterAny = <X>(
   statusCodes: number[]
 ): ErrorFilter<X> => ({
-  canHandle: error => {
-    const status = getStatusCodeFromError(error);
+  canHandleError: error => {
+    const status = errorToStatusCode(error);
     return status !== null && statusCodes.includes(status);
   },
 });
@@ -49,17 +49,26 @@ export const statusCodeFilterAny = <X>(
 /**
  * Creates a filter that matches errors within a status code range (inclusive)
  */
-export const statusCodeFilterRange = <X>(
+export const statusCodeErrorFilterRange = <X>(
   min: number,
   max: number
 ): ErrorFilter<X> => ({
-  canHandle: error => {
-    const status = getStatusCodeFromError(error);
+  canHandleError: error => {
+    const status = errorToStatusCode(error);
     return status !== null && status >= min && status <= max;
   },
 });
 
 // Common status code ranges
-export const serverErrorFilter = statusCodeFilterRange<unknown>(500, 599);
-export const clientErrorFilter = statusCodeFilterRange<unknown>(400, 499);
-export const redirectFilter = statusCodeFilterRange<unknown>(300, 399);
+export const serverErrorErrorFilter = statusCodeErrorFilterRange<unknown>(
+  500,
+  599
+);
+export const clientErrorErrorFilter = statusCodeErrorFilterRange<unknown>(
+  400,
+  499
+);
+export const redirectErrorFilter = statusCodeErrorFilterRange<unknown>(
+  300,
+  399
+);

@@ -11,14 +11,18 @@ export function errorToString(error: unknown): string {
   }
   return String(error);
 }
-export const keywordFilterAny = <X>(keywords: string[]): ErrorFilter<X> => ({
-  canHandle: error => {
+export const keywordErrorFilterAny = <X>(
+  keywords: string[]
+): ErrorFilter<X> => ({
+  canHandleError: error => {
     return keywords.some(keyword => errorToString(error).includes(keyword));
   },
 });
 
-export const keywordFilterAll = <X>(keywords: string[]): ErrorFilter<X> => ({
-  canHandle: error => {
+export const keywordErrorFilterAll = <X>(
+  keywords: string[]
+): ErrorFilter<X> => ({
+  canHandleError: error => {
     return keywords.every(keyword => errorToString(error).includes(keyword));
   },
 });

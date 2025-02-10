@@ -1,10 +1,10 @@
 import {
-  executeWithRetry,
-  executeWithRetryAll,
-  delayedRetryErrorResolver,
-  customRetryErrorResolver,
-  keywordFilterAny,
-  allFilters,
+  advancedRetry,
+  advancedRetryAll,
+  delayErrorResolver,
+  customErrorResolver,
+  keywordErrorFilterAny,
+  allErrorFilter,
 } from '../../src/index';
 
 describe('README Examples', () => {
@@ -26,14 +26,14 @@ describe('README Examples', () => {
           json: () => Promise.resolve({ data: 'test' }),
         });
 
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: async () => {
           const response = await fetch('https://api.example.com/data');
           if (!response.ok) throw new Error('API request failed');
           return response.json();
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             configuration: {
               maxRetries: 3,
               initialDelayMs: 100, // Reduced for testing
@@ -64,15 +64,15 @@ describe('README Examples', () => {
         .mockRejectedValueOnce(new NetworkError('network timeout'))
         .mockResolvedValueOnce({ data: 'success' });
 
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: async () => {
           return await fetch('https://api.example.com/data');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
-            canHandleError: allFilters([
-              keywordFilterAny(['network', 'timeout']),
+            canHandleError: allErrorFilter([
+              keywordErrorFilterAny(['network', 'timeout']),
               error => error instanceof NetworkError,
             ]),
             callback: (error, attempt, config) => ({
@@ -102,7 +102,7 @@ describe('README Examples', () => {
       }
       let attempt = 0;
 
-      const result = await executeWithRetry<string, RetryContext>({
+      const result = await advancedRetry<string, RetryContext>({
         operation: async context => {
           attempt++;
           const url = context?.data?.serverUrl ?? 'primary-server.com';
@@ -116,7 +116,7 @@ describe('README Examples', () => {
           return response.text();
         },
         errorResolvers: [
-          customRetryErrorResolver<{ maxRetries: number }, RetryContext>({
+          customErrorResolver<{ maxRetries: number }, RetryContext>({
             configuration: { maxRetries: 3 },
             callback: (error, attempt, config) => ({
               remainingAttempts: config.maxRetries - attempt,
@@ -145,7 +145,7 @@ describe('README Examples', () => {
         ok: false,
       });
 
-      const operationPromise = executeWithRetry({
+      const operationPromise = advancedRetry({
         operation: async (context, signal) => {
           const response: {
             ok: boolean;
@@ -158,7 +158,7 @@ describe('README Examples', () => {
           return { data: json.data };
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             configuration: {
               maxRetries: 3,
               initialDelayMs: 1000,
@@ -186,13 +186,13 @@ describe('README Examples', () => {
         .mockResolvedValueOnce({ json: () => Promise.resolve({ api: 1 }) })
         .mockResolvedValueOnce({ json: () => Promise.resolve({ api: 2 }) });
 
-      const results = await executeWithRetryAll({
+      const results = await advancedRetryAll({
         operations: [
           () => fetch('https://api1.example.com').then(r => r.json()),
           () => fetch('https://api2.example.com').then(r => r.json()),
         ],
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             configuration: {
               maxRetries: 3,
               initialDelayMs: 100,

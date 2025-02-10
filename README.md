@@ -35,17 +35,17 @@ npm install advanced-retry
 ## Basic Usage
 
 ```typescript
-import { executeWithRetry, delayedRetryErrorResolver } from 'advanced-retry';
+import { advancedRetry, delayErrorResolver } from 'advanced-retry';
 
 // Simple retry with linear backoff
-const result = await executeWithRetry({
+const result = await advancedRetry({
   operation: async () => {
     const response = await fetch('https://api.example.com/data');
     if (!response.ok) throw new Error('API request failed');
     return response.json();
   },
   errorResolvers: [
-    delayedRetryErrorResolver({
+    delayErrorResolver({
       configuration: {
         maxRetries: 3,
         initialDelayMs: 1000,
@@ -66,29 +66,97 @@ if (result.success) {
 
 ## Advanced Usage
 
+## Multiple Parallel Error Resolvers
+
+```typescript
+const result = await advancedRetry({
+  operation: async () => {
+    const response = await fetch('https://api.example.com/data');
+    if (!response.ok) throw new Error('API request failed');
+    return response.json();
+  },
+  errorResolvers: [
+    customErrorResolver({
+      canHandleError: keywordErrorFilterAny(['no credits']),
+      callback: async (error, attempt, config) => {
+        //TODO: Add credits to api.example.com
+
+        if (creditTopupSuccessful) {
+          return {
+            remainingAttempts: 0,
+            unrecoverable: false,
+            context: { lastError: error.message },
+          };
+        }
+        // If topup fails, we can't recover, so we return unrecoverable
+        return {
+          remainingAttempts: 0,
+          unrecoverable: true,
+          context: { lastError: error.message },
+        };
+      },
+    }),
+    // Fallback to linear backoff for any other error
+    delayErrorResolver({
+      configuration: { maxRetries: 3 },
+    }),
+  ],
+});
+```
+
+### Multiple Parallel Operations
+
+```typescript
+const results = await advancedRetryAll({
+  operations: [
+    () => fetch('https://api1.example.com').then(r => r.json()),
+    () => fetch('https://api2.example.com').then(r => r.json()),
+  ],
+  errorResolvers: [
+    delayErrorResolver({
+      configuration: {
+        maxRetries: 3,
+        initialDelayMs: 1000,
+        maxDelayMs: 5000,
+        backoffMultiplier: 2,
+      },
+    }),
+  ],
+  overallTimeout: 15000,
+});
+
+results.forEach((result, index) => {
+  if (result.success) {
+    console.log(`API ${index + 1} succeeded:`, result.result);
+  } else {
+    console.error(`API ${index + 1} failed:`, result.error);
+  }
+});
+```
+
 ### Error Filtering
 
 ```typescript
 import {
-  executeWithRetry,
-  customRetryErrorResolver,
-  keywordFilterAny,
-  keywordFilterAll,
-  allFilters,
-  anyFilters,
+  advancedRetry,
+  customErrorResolver,
+  keywordErrorFilterAny,
+  keywordErrorFilterAll,
+  allErrorFilter,
+  anyErrorFilter,
 } from 'advanced-retry';
 
 // Retry only specific network errors
-const result = await executeWithRetry({
+const result = await advancedRetry({
   operation: async () => {
     // Your operation
   },
   errorResolvers: [
-    customRetryErrorResolver({
+    customErrorResolver({
       configuration: { maxRetries: 3 },
       // Combine multiple filters
-      canHandleError: allFilters([
-        keywordFilterAny(['network', 'timeout']),
+      canHandleError: allErrorFilter([
+        keywordErrorFilterAny(['network', 'timeout']),
         error => error instanceof NetworkError,
       ]),
       callback: async (error, attempt, config) => ({
@@ -109,14 +177,14 @@ interface RetryContext {
   serverUrl: string;
 }
 
-const result = await executeWithRetry<string, RetryContext>({
+const result = await advancedRetry<string, RetryContext>({
   operation: async context => {
     const url = context?.data?.serverUrl ?? 'primary-server.com';
     const response = await fetch(`https://${url}/api`);
     return response.text();
   },
   errorResolvers: [
-    customRetryErrorResolver<{ maxRetries: number }, string>({
+    customErrorResolver<{ maxRetries: number }, string>({
       configuration: { maxRetries: 3 },
       callback: (error, attempt, config, context) => ({
         remainingAttempts: config.maxRetries - attempt,
@@ -136,7 +204,7 @@ const result = await executeWithRetry<string, RetryContext>({
 ```typescript
 const controller = new AbortController();
 
-const result = await executeWithRetry({
+const result = await advancedRetry({
   operation: async (context, signal) => {
     const response = await fetch('https://api.example.com/data', {
       signal, // Pass the abort signal to fetch
@@ -144,7 +212,7 @@ const result = await executeWithRetry({
     return response.json();
   },
   errorResolvers: [
-    delayedRetryErrorResolver({
+    delayErrorResolver({
       configuration: {
         maxRetries: 3,
         initialDelayMs: 1000,
@@ -159,36 +227,6 @@ const result = await executeWithRetry({
 
 // Abort operation if needed
 setTimeout(() => controller.abort(), 5000);
-```
-
-### Multiple Parallel Operations
-
-```typescript
-const results = await executeWithRetryAll({
-  operations: [
-    () => fetch('https://api1.example.com').then(r => r.json()),
-    () => fetch('https://api2.example.com').then(r => r.json()),
-  ],
-  errorResolvers: [
-    delayedRetryErrorResolver({
-      configuration: {
-        maxRetries: 3,
-        initialDelayMs: 1000,
-        maxDelayMs: 5000,
-        backoffMultiplier: 2,
-      },
-    }),
-  ],
-  overallTimeout: 15000,
-});
-
-results.forEach((result, index) => {
-  if (result.success) {
-    console.log(`API ${index + 1} succeeded:`, result.result);
-  } else {
-    console.error(`API ${index + 1} failed:`, result.error);
-  }
-});
 ```
 
 ## API Reference

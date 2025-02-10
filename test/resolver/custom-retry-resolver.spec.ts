@@ -1,23 +1,26 @@
-import { executeWithRetry, customRetryErrorResolver } from '../../src';
-import { allFilters, ErrorFilter, anyFilters } from '../../src/filter/base';
+import { advancedRetry, customErrorResolver } from '../../src';
+import {
+  allErrorFilter,
+  ErrorFilter,
+  anyErrorFilter,
+} from '../../src/filter/base';
 
 describe('customRetryErrorResolver', () => {
   // Basic retry behavior
   describe('retry behavior', () => {
     it('should not retry when error resolver cannot handle the error', async () => {
       let occurrenceCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           occurrenceCount++;
           throw new Error('test');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
             canHandleError: () => false,
             callback: (error, attempt, configuration, context) => {
               if (context) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 expect(context.data).toBe('test');
               }
               if (attempt == 1) {
@@ -42,17 +45,16 @@ describe('customRetryErrorResolver', () => {
 
     it('should retry specified number of times with Promise-based callback', async () => {
       let occurrenceCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           occurrenceCount++;
           throw new Error('test');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
             callback: (error, attempt, configuration, context) => {
               if (context) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 expect(context.data).toBe('test');
               }
               if (attempt == 0) {
@@ -77,13 +79,13 @@ describe('customRetryErrorResolver', () => {
 
     it('should retry specified number of times with synchronous callback', async () => {
       let occurrenceCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           occurrenceCount++;
           throw new Error('test');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 2 },
             canHandleError: () => true,
             callback: (_, attempt, configuration) => ({
@@ -102,13 +104,13 @@ describe('customRetryErrorResolver', () => {
 
     it('should retry with custom context data', async () => {
       let occurrenceCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           occurrenceCount++;
           throw new Error('abc1');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
             canHandleError: () => true,
             callback: (
@@ -145,13 +147,13 @@ describe('customRetryErrorResolver', () => {
   describe('error handling', () => {
     it('should stop retrying when marked as unrecoverable', async () => {
       let occurrenceCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           occurrenceCount++;
           throw new Error('unrecoverable');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
             canHandleError: () => true,
             callback: () => ({
@@ -171,13 +173,13 @@ describe('customRetryErrorResolver', () => {
     it('should throw error when throwOnUnrecoveredError is true', async () => {
       let occurrenceCount = 0;
       await expect(
-        executeWithRetry({
+        advancedRetry({
           operation: () => {
             occurrenceCount++;
             throw new Error('unhandled error');
           },
           errorResolvers: [
-            customRetryErrorResolver({
+            customErrorResolver({
               configuration: { maxRetries: 3 },
               canHandleError: () => false,
               callback: () => ({
@@ -196,7 +198,7 @@ describe('customRetryErrorResolver', () => {
 
     it('should handle successful operation after retries', async () => {
       let occurrenceCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           occurrenceCount++;
           if (occurrenceCount < 3) {
@@ -205,7 +207,7 @@ describe('customRetryErrorResolver', () => {
           return 'success';
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
             canHandleError: () => true,
             callback: (_, attempt, configuration) => ({
@@ -224,13 +226,13 @@ describe('customRetryErrorResolver', () => {
 
     it('should stop retrying when remainingAttempts is 0', async () => {
       let occurrenceCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           occurrenceCount++;
           throw new Error('no more attempts');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
             canHandleError: () => true,
             callback: () => ({
@@ -252,13 +254,13 @@ describe('customRetryErrorResolver', () => {
   describe('special cases', () => {
     it('should handle operation timeout', async () => {
       let occurrenceCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           occurrenceCount++;
           return new Promise(resolve => setTimeout(resolve, 1000));
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
             canHandleError: () => true,
             callback: (_, attempt, configuration) => ({
@@ -278,12 +280,12 @@ describe('customRetryErrorResolver', () => {
 
     it('should handle operation with no return value', async () => {
       let occurrenceCount = 0;
-      await executeWithRetry({
+      await advancedRetry({
         operation: () => {
           occurrenceCount++;
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 2 },
             canHandleError: () => true,
             callback: (_, attempt, configuration, context) => ({
@@ -301,13 +303,13 @@ describe('customRetryErrorResolver', () => {
 
     it('should handle undefined context transitions', async () => {
       let occurrenceCount = 0;
-      await executeWithRetry({
+      await advancedRetry({
         operation: () => {
           occurrenceCount++;
           throw new Error('testing');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
             canHandleError: () => true,
             callback: (_, attempt, configuration) => {
@@ -341,13 +343,13 @@ describe('customRetryErrorResolver', () => {
 
     it('should try multiple error resolvers until one handles the error', async () => {
       let occurrenceCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           occurrenceCount++;
           throw new Error('test-multiple');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
             canHandleError: () => false,
             callback: () => ({
@@ -356,7 +358,7 @@ describe('customRetryErrorResolver', () => {
               unrecoverable: false,
             }),
           }),
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
             canHandleError: () => true,
             callback: () => ({
@@ -375,13 +377,13 @@ describe('customRetryErrorResolver', () => {
 
     it('should handle non-Error throwables', async () => {
       let occurrenceCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           occurrenceCount++;
           throw 'string error';
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
             canHandleError: () => true,
             callback: () => ({
@@ -400,7 +402,7 @@ describe('customRetryErrorResolver', () => {
 
     it('should handle empty error resolvers array', async () => {
       let occurrenceCount = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           occurrenceCount++;
           throw new Error('no-resolvers');
@@ -416,7 +418,7 @@ describe('customRetryErrorResolver', () => {
     it('should handle abort signal', async () => {
       let occurrenceCount = 0;
       const controller = new AbortController();
-      const promise = executeWithRetry({
+      const promise = advancedRetry({
         operation: async (retryContext, signal) => {
           occurrenceCount++;
           await new Promise(resolve => setTimeout(resolve, 500));
@@ -426,7 +428,7 @@ describe('customRetryErrorResolver', () => {
           return 'success';
         },
         errorResolvers: [
-          customRetryErrorResolver<{ maxRetries: number }, undefined>({
+          customErrorResolver<{ maxRetries: number }, undefined>({
             configuration: { maxRetries: 3 },
             canHandleError: () => true,
             callback: () => ({
@@ -452,19 +454,19 @@ describe('executeWithRetry with filters', () => {
   describe('error filtering', () => {
     it('should retry only when filter matches error', async () => {
       let attempts = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           attempts++;
           throw new Error('specific error');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
-            canHandleError: allFilters([
+            canHandleError: allErrorFilter([
               error => error instanceof Error,
               (error: unknown) =>
                 error instanceof Error && error.message === 'specific error',
-            ]).canHandle,
+            ]).canHandleError,
             callback: (_, attempt, configuration) => ({
               context: undefined,
               remainingAttempts: configuration.maxRetries - attempt,
@@ -481,19 +483,19 @@ describe('executeWithRetry with filters', () => {
 
     it('should not retry when filter does not match error', async () => {
       let attempts = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           attempts++;
           throw new Error('different error');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
-            canHandleError: allFilters([
+            canHandleError: allErrorFilter([
               error => error instanceof Error,
               (error: unknown) =>
                 error instanceof Error && error.message === 'specific error',
-            ]).canHandle,
+            ]).canHandleError,
             callback: (_, attempt, configuration) => ({
               context: undefined,
               remainingAttempts: configuration.maxRetries - attempts,
@@ -510,7 +512,7 @@ describe('executeWithRetry with filters', () => {
 
     it('should handle multiple error filters with anyFilters', async () => {
       let attempts = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           attempts++;
           if (attempts === 1) throw new Error('first error');
@@ -519,9 +521,9 @@ describe('executeWithRetry with filters', () => {
           throw new Error('unexpected');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
-            canHandleError: anyFilters([
+            canHandleError: anyErrorFilter([
               (error: unknown) =>
                 error instanceof Error && error.message === 'first error',
               (error: unknown) =>
@@ -543,22 +545,22 @@ describe('executeWithRetry with filters', () => {
     it('should handle complex nested filters', async () => {
       let attempts = 0;
       const errorFilter: ErrorFilter<any> = {
-        canHandle: (error: unknown) =>
+        canHandleError: (error: unknown) =>
           error instanceof Error && error.message.includes('retry'),
       };
 
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           attempts++;
           if (attempts <= 2) throw new Error('please retry');
           return 'success';
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 3 },
-            canHandleError: allFilters([
+            canHandleError: allErrorFilter([
               error => error instanceof Error,
-              anyFilters([
+              anyErrorFilter([
                 errorFilter,
                 (error: unknown) =>
                   error instanceof Error && error.message === 'specific error',
@@ -579,15 +581,15 @@ describe('executeWithRetry with filters', () => {
     });
     it('should handle filters with context', async () => {
       let attempts = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           attempts++;
           throw new Error('retry with context');
         },
         errorResolvers: [
-          customRetryErrorResolver({
+          customErrorResolver({
             configuration: { maxRetries: 2 },
-            canHandleError: allFilters([
+            canHandleError: allErrorFilter([
               (error, attempt, context) => {
                 if (attempt === 0) {
                   expect(context.data).toBeUndefined();
@@ -596,7 +598,7 @@ describe('executeWithRetry with filters', () => {
                 }
                 return true;
               },
-            ]).canHandle,
+            ]).canHandleError,
             callback: (_, attempt, configuration) => ({
               context: { retryCount: attempt + 1 },
               remainingAttempts: configuration.maxRetries - attempt,

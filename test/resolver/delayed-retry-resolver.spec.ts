@@ -1,17 +1,17 @@
-import { executeWithRetry, delayedRetryErrorResolver } from '../../src';
+import { advancedRetry, delayErrorResolver } from '../../src';
 
 describe('delayedRetryErrorResolver', () => {
   // Basic retry behavior
   describe('basic retry behavior', () => {
     it('should retry operation when error resolver returns retry resolution', async () => {
       let attempts = 0;
-      await executeWithRetry({
+      await advancedRetry({
         operation: () => {
           attempts++;
           throw new Error('test');
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             configuration: {
               maxRetries: 1,
               initialDelayMs: 0,
@@ -28,13 +28,13 @@ describe('delayedRetryErrorResolver', () => {
 
     it('should not retry when error resolver cannot handle the error', async () => {
       let attempts = 0;
-      await executeWithRetry({
+      await advancedRetry({
         operation: () => {
           attempts++;
           throw new Error('test');
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             canHandleError: () => false,
             configuration: {
               maxRetries: 1,
@@ -55,7 +55,7 @@ describe('delayedRetryErrorResolver', () => {
   describe('delay configuration', () => {
     it('should handle negative initial delay', async () => {
       let attempts = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           attempts++;
           if (attempts === 1) {
@@ -64,7 +64,7 @@ describe('delayedRetryErrorResolver', () => {
           return Promise.resolve();
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             canHandleError: () => true,
             configuration: {
               maxRetries: 3,
@@ -80,7 +80,7 @@ describe('delayedRetryErrorResolver', () => {
 
     it('should handle maxDelay configuration', async () => {
       let attempts = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           attempts++;
           if (attempts === 1) {
@@ -89,7 +89,7 @@ describe('delayedRetryErrorResolver', () => {
           return Promise.resolve();
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             canHandleError: () => true,
             configuration: {
               maxRetries: 3,
@@ -105,7 +105,7 @@ describe('delayedRetryErrorResolver', () => {
 
     it('should work with minimal configuration (only maxRetries)', async () => {
       let attempts = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           attempts++;
           if (attempts === 1) {
@@ -114,7 +114,7 @@ describe('delayedRetryErrorResolver', () => {
           return Promise.resolve();
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             canHandleError: () => true,
             configuration: {
               maxRetries: 3,
@@ -129,7 +129,7 @@ describe('delayedRetryErrorResolver', () => {
 
     it('should handle backoff multiplier configuration', async () => {
       let attempts = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           attempts++;
           if (attempts === 1) {
@@ -138,7 +138,7 @@ describe('delayedRetryErrorResolver', () => {
           return Promise.resolve();
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             canHandleError: () => true,
             configuration: {
               maxRetries: 3,
@@ -155,7 +155,7 @@ describe('delayedRetryErrorResolver', () => {
 
     it('should handle negative custom delay function', async () => {
       let attempts = 0;
-      const result = await executeWithRetry({
+      const result = await advancedRetry({
         operation: () => {
           attempts++;
           if (attempts === 1) {
@@ -164,7 +164,7 @@ describe('delayedRetryErrorResolver', () => {
           return Promise.resolve();
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             canHandleError: () => true,
             configuration: {
               maxRetries: 3,
@@ -186,13 +186,13 @@ describe('delayedRetryErrorResolver', () => {
       const timeoutId = setTimeout(() => {
         throw new Error('test');
       }, 10000);
-      await executeWithRetry({
+      await advancedRetry({
         operation: () => {
           attempts++;
           throw new Error('test');
         },
         errorResolvers: [
-          delayedRetryErrorResolver({
+          delayErrorResolver({
             canHandleError: () => true,
             configuration: {
               maxRetries: 3,

@@ -76,6 +76,7 @@ export interface RetryOptions<T, X> {
   throwOnUnrecoveredError?: boolean;
   overallTimeout?: number;
   abortSignal?: AbortSignal;
+  finallyCallback?: (() => void) | undefined;
 }
 
 /**
@@ -218,11 +219,12 @@ export function abortSignalAny(abortSignals: (AbortSignal | undefined)[]): {
  * @param throwOnUnrecoveredError - Whether to throw an error if the operation failed to recover, instead of returning a result.
  * @returns The result of the operation
  */
-export async function executeWithRetry<T, X>({
+export async function advancedRetry<T, X>({
   operation: operation,
   errorResolvers = [],
   throwOnUnrecoveredError = false,
   overallTimeout = undefined,
+  finallyCallback = undefined,
   abortSignal: externalAbortSignal = undefined,
 }: RetryOptions<T, X>): Promise<RetryResult<T>> {
   const startTime = Date.now();
@@ -323,10 +325,20 @@ export async function executeWithRetry<T, X>({
     };
   } finally {
     cleanup(); // Ensure cleanup runs in all cases
+    finallyCallback?.();
   }
 }
 
-export async function executeWithRetryAll<T extends unknown[], X>({
+/**
+ * Executes an operation with retry logic.
+ *
+ * @param operations - The operations to retry. All operations will be executed in parallel, if any of the operations fail, the operation will be retried. The other operations will continue to run.
+ * @param errorResolvers - The resolvers to use to try and recover
+ * @param overallTimeout - The overall timeout for the operation. If set and the operation takes longer than this, it will be cancelled, any retries will not be attempted.
+ * @param abortSignal - An optional abort signal to cancel the operations if timeouts are used.
+ * @returns The result of the operations
+ */
+export async function advancedRetryAll<T extends unknown[], X>({
   operations,
   errorResolvers = [],
   overallTimeout = undefined,
@@ -339,7 +351,7 @@ export async function executeWithRetryAll<T extends unknown[], X>({
 }): Promise<{ [K in keyof T]: RetryResult<T[K]> }> {
   return Promise.all(
     operations.map(operation =>
-      executeWithRetry({
+      advancedRetry({
         operation,
         errorResolvers,
         throwOnUnrecoveredError: false,
