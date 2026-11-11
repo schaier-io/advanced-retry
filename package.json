@@ -12,7 +12,7 @@
     "cm": "cz",
     "lint": "eslint ./src/ --fix",
     "prepare": "husky",
-    "semantic-release": "semantic-release",
+    "semantic-release": "npx --yes semantic-release@25.0.9",
     "test:watch": "jest --watch",
     "test": "jest --coverage",
     "typecheck": "tsc --noEmit"
@@ -57,10 +57,14 @@
     "jest": "^29.7.0",
     "lint-staged": "^15.4.3",
     "prettier": "^3.4.2",
-    "semantic-release": "^24.2.1",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.2.1",
     "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.7"
+    }
   },
   "config": {
     "commitizen": {

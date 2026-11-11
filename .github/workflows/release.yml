@@ -32,7 +32,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release
+        run: npx --yes semantic-release@25.0.9
       - name: Upload Code Coverage
         uses: codecov/codecov-action@v3.1.0
         with:
