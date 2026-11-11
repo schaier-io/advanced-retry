@@ -12,7 +12,7 @@
     "cm": "cz",
     "lint": "eslint ./src/ --fix",
     "prepare": "husky",
-    "semantic-release": "npx --yes semantic-release@25",
+    "semantic-release": "npx --yes semantic-release@25.0.9",
     "test:watch": "jest --watch",
     "test": "jest --coverage",
     "typecheck": "tsc --noEmit"
